@@ -18,7 +18,7 @@ const exerciceSchema = new Schema({
   date: String
 })
 
-let Exercise = mongoose.model('Exersice', exerciceSchema);
+let Exercise = mongoose.model('Exercise', exerciceSchema);
 Exercise.createCollection();
 
 exports.Exercise = Exercise;

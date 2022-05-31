@@ -116,8 +116,7 @@ User.findById(req.params._id,'username')
             if(!userLog) {
               
               createLog(user.username, user._id, exoAdded.description, exoAdded.duration, exoAdded.date)
-                
-              
+      
             }
             //updating it
             if(userLog){
@@ -172,6 +171,30 @@ function updateLog(id, count , description, duration, date){
 GET request to /api/users/:_id/logs to retrieve a full exercise log of any user
 */
 app.get('/api/users/:_id/logs', (req, res)=>{
+  // console.log(req.params._id)
+  Log.findById(req.params._id)
+    .select('-_id -__v')
+    .exec((error, logData ) =>{
+    // console.log(logData)
+    if(error){
+      return res.json({
+        status: "the id provided doesn't existe"
+      })  
+    }
+    if(!logData){
+      return res.json({
+        status: "no logs for this user"
+      })  
+    }
+      console.log(logData)
+    if(logData){
+      
+    return res.json(
+        logData
+      ) 
+    }
+     
+  })
   
 })
 
