@@ -172,14 +172,13 @@ GET request to /api/users/:_id/logs to retrieve a full exercise log of any user
 */
 app.get('/api/users/:_id/logs', (req, res)=>{
  
-  let limit = 0
+  let limit;
   if(req.query.limit) 
     limit = req.query.limit
   console.log(req.query)
   
   Log.findById(req.params._id)
     .select('-_id -__v')
-    .limit(limit)
     .exec((error, logData ) =>{
     // console.log(logData)
     if(error){
@@ -208,12 +207,14 @@ app.get('/api/users/:_id/logs', (req, res)=>{
             duration: logData.log[i].duration,
             date: date
           })
-            
+         if(limit){
+            if(arrDateConverted.length == limit)
+              break
+          } 
         }
       }
       if(req.query.from && req.query.to)
       {
-        
         
         for(let i in logData.log){
           
@@ -231,6 +232,10 @@ app.get('/api/users/:_id/logs', (req, res)=>{
               duration: logData.log[i].duration,
               date: date
             })
+          }
+          if(limit){
+            if(arrDateConverted.length == limit)
+              break
           }
       }
         // console.log(arrDateConverted)
