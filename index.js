@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const bodyParser = require("body-parser")
 const cors = require('cors')
+
 const User = require('./model/User').User
 const Exercise = require('./model/Exercise').Exercise
 const Log = require('./model/Log').Log
@@ -17,8 +18,10 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
 });
 
-// Creating a new user
 
+/*
+* Create new user and return username and id
+*/
 app.post('/api/users', (req, res)=>{
   User.create({username: req.body.username},(error, data)=>{
     
@@ -31,6 +34,11 @@ app.post('/api/users', (req, res)=>{
     
   })
 })
+
+/*
+* fetch data from user collection and return all username
+* and id
+*/
 app.get('/api/users', (req, res)=>{
 
   let usersData = [];
@@ -49,12 +57,123 @@ app.get('/api/users', (req, res)=>{
         usersData
     )
   })
-  // usersData.push({"a":1})
-  // console.log(usersData)
+})
+/*
+POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied, the current date will be used.
+*/
+app.post('/api/users/:_id/exercises', (req, res, next)=>{
   
+  User.findById({_id: req.params._id})
+      .select('_id')
+      .exec((error, data)=>{
+        
+        if(error) {
+          return res.json({
+            error: "invalid id"
+          })
+        }
+        if(data.length === 0){
+          return res.json({
+            error: "the id provided doesn't existe"
+          })
+        }
+        if(data){
+          next()
+        } 
+      })
+}, (req, res)=>{
+  
+  let date;
+  let username;
+  let description = req.body.description;
+  let duration = req.body.duration;
+  
+  if(req.body.date === '')
+  {
+    date = new Date().toDateString()
+  }else{
+    date = new Date(req.body.date).toDateString()
+  }
+/*
+The response returned from POST /api/users/:_id/exercises will be the user object with the exercise fields added
+*/
+User.findById(req.params._id,'username')
+      .exec((error, user)=>{
+        username = user.username
+
+        Exercise.create({
+          username: username,
+          description: description,
+          duration: duration,
+          date: date
+        }, (error, exoAdded)=>{
+          if(error) console.error(error)
+          // Updating / creating new log if doesn't exist
+          Log.findById(user._id, (error, userLog)=>{
+            // console.log("in Log.findById")
+            // console.log( error )
+            // console.log(userLog)
+            if(!userLog) {
+              
+              createLog(user.username, user._id, exoAdded.description, exoAdded.duration, exoAdded.date)
+                
+              
+            }
+            //updating it
+            if(userLog){
+              
+              updateLog(user._id,userLog.count, exoAdded.description, exoAdded.duration, exoAdded.date)
+              
+            }
+          })
+
+          
+          return res.json({
+            _id: user._id,
+            username: user.username,
+            date: exoAdded.date,
+            duration: exoAdded.duration,
+            description: exoAdded.description
+          })
+        })
+       
+      })
+})
+// creating a function that create a newLog
+function createLog(username, id, description, duration, date){
+  Log.create({
+      username: username,
+      count: 1,
+      _id: id,
+      log:[{
+        description: description,
+        duration: duration,
+        date: date,
+      }]
+    })
+}
+// updating Log
+function updateLog(id, count , description, duration, date){
+  count++
+
+  Log.findById(id, (err, data)=>{
+    data.count = count
+    data.log.push({
+      description: description,
+      duration: duration,
+      date: date
+    })
+    data.save((error, done)=>{
+      if(error) console.error(error)
+    })
+  })
+}
+/*
+GET request to /api/users/:_id/logs to retrieve a full exercise log of any user
+*/
+app.get('/api/users/:_id/logs', (req, res)=>{
   
 })
-
 
 
 
