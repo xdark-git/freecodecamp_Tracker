@@ -214,13 +214,18 @@ app.get('/api/users/:_id/logs', (req, res)=>{
       if(req.query.from && req.query.to)
       {
         
+        
         for(let i in logData.log){
           
           let date = logData.log[i].date
+          console.log(`date : ${date}`)
           date = new Date().toDateString();
-  
-          if(date >= req.query.from && date <= req.query.from)
+          req.query.from = new Date().toDateString();
+          req.query.to  = new Date().toDateString();
+          
+          if(date >= req.query.from && date <= req.query.to)
           {
+            // console.log("date >= from and date <= to ")
             arrDateConverted.push({
               description: logData.log[i].description,
               duration: logData.log[i].duration,
