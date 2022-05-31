@@ -171,10 +171,15 @@ function updateLog(id, count , description, duration, date){
 GET request to /api/users/:_id/logs to retrieve a full exercise log of any user
 */
 app.get('/api/users/:_id/logs', (req, res)=>{
-  // console.log(req.params._id)
+ 
+  let limit = 0
+  if(req.query.limit) 
+    limit = req.query.limit
+  console.log(req.query)
+  
   Log.findById(req.params._id)
     .select('-_id -__v')
-    .limit(10)
+    .limit(limit)
     .exec((error, logData ) =>{
     // console.log(logData)
     if(error){
@@ -190,26 +195,52 @@ app.get('/api/users/:_id/logs', (req, res)=>{
       // console.log(logData)
     if(logData){
       let arrDateConverted = []
-      
-      for(let i in logData.log){
-        arrDateConverted.push({
-          description: logData.log[i].description,
-          duration: logData.log[i].duration,
-          date: logData.log[i].date.toString()
-        })
+
+      if(!req.query.from && !req.query.to)
+      {
+        for(let i in logData.log){
+        
+          let date = logData.log[i].date
+          date = new Date().toDateString();
+          
+          arrDateConverted.push({
+            description: logData.log[i].description,
+            duration: logData.log[i].duration,
+            date: date
+          })
+            
+        }
       }
-      // console.log(arrDateConverted)
-      let arrReturned = {
-        username: logData.username,
-        count: logData.count,
-        log: [...arrDateConverted]
+      if(req.query.from && req.query.to)
+      {
+        
+        for(let i in logData.log){
+          
+          let date = logData.log[i].date
+          date = new Date().toDateString();
+  
+          if(date >= req.query.from && date <= req.query.from)
+          {
+            arrDateConverted.push({
+              description: logData.log[i].description,
+              duration: logData.log[i].duration,
+              date: date
+            })
+          }
       }
-      console.log(arrReturned)
-    return res.json(
-        arrReturned
-      ) 
-    }
-     
+        // console.log(arrDateConverted)
+         
+        
+      }
+      let objReturned = {
+          username: logData.username,
+          count: logData.count,
+          log: [...arrDateConverted]
+        }
+      return res.json(
+          objReturned
+        )
+    } 
   })
   
 })
