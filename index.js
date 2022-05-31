@@ -174,6 +174,8 @@ app.get('/api/users/:_id/logs', (req, res)=>{
   // console.log(req.params._id)
   Log.findById(req.params._id)
     .select('-_id -__v')
+    .limit(10)
+    .from()
     .exec((error, logData ) =>{
     // console.log(logData)
     if(error){
@@ -186,11 +188,26 @@ app.get('/api/users/:_id/logs', (req, res)=>{
         status: "no logs for this user"
       })  
     }
-      console.log(logData)
+      // console.log(logData)
     if(logData){
+      let arrDateConverted = []
       
+      for(let i in logData.log){
+        arrDateConverted.push({
+          description: logData.log[i].description,
+          duration: logData.log[i].duration,
+          date: logData.log[i].date.toString()
+        })
+      }
+      // console.log(arrDateConverted)
+      let arrReturned = {
+        username: logData.username,
+        count: logData.count,
+        log: [...arrDateConverted]
+      }
+      console.log(arrReturned)
     return res.json(
-        logData
+        arrReturned
       ) 
     }
      
