@@ -175,7 +175,6 @@ app.get('/api/users/:_id/logs', (req, res)=>{
   Log.findById(req.params._id)
     .select('-_id -__v')
     .limit(10)
-    .from()
     .exec((error, logData ) =>{
     // console.log(logData)
     if(error){
